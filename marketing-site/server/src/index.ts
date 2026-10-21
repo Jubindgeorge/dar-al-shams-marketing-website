@@ -121,12 +121,13 @@ app.get('/api/admin/leads', requireAdmin, async (req, res) => {
 });
 app.patch('/api/admin/leads/:id', requireAdmin, async (req, res) => {
   if (!database) return res.status(503).json({ error: 'Lead database is not configured yet.' });
-  if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'Invalid enquiry ID.' });
+  const leadId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  if (!ObjectId.isValid(leadId)) return res.status(400).json({ error: 'Invalid enquiry ID.' });
   const parsed = statusSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Invalid enquiry status.' });
   try {
     const result = await database.collection('leads').updateOne(
-      { _id: new ObjectId(req.params.id) },
+      { _id: new ObjectId(leadId) },
       { $set: { status: parsed.data.status, updatedAt: new Date() } }
     );
     if (!result.matchedCount) return res.status(404).json({ error: 'Enquiry not found.' });
