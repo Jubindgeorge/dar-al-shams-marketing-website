@@ -16,7 +16,7 @@ This application is isolated under `marketing-site/` on the `feature/public-mark
 3. Set `VITE_API_BASE_URL=http://localhost:4000` in the client environment if the API is running locally.
 
 ## Before public launch
-- The current scaffold loads the existing `LOGO.png` from the repository as a temporary development reference. Before production, copy the approved logo into `client/public/brand/dar-al-shams-logo.png` and change the image reference to this local asset so the site does not depend on GitHub hotlinking.
+- The original ERP logo assets `LOGO.png`, `LOGO.jpeg`, and `logo white .png` have been copied unchanged into `client/public/brand/`. The site logo and favicon use the local `/brand/LOGO.png` asset; verify the white variant on dark backgrounds during visual review.
 - Service cards in `client/src/content.ts` are initial drafts inferred from the ERP workflow and must be approved by management before advertising.
 - Confirm phone, email, location, legal business name, Arabic company name, service descriptions, offers, terms and privacy notice.
 - Set a strong admin authentication provider before enabling admin lead-management routes. This starter deliberately does not expose unauthenticated lead-list or update endpoints.
