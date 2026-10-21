@@ -7,10 +7,15 @@ on:
       - '.github/workflows/marketing-site-build.yml'
   push:
     branches:
+      - main
       - feature/public-marketing-site
     paths:
       - 'marketing-site/**'
       - '.github/workflows/marketing-site-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
