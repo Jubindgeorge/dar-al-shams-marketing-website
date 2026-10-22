@@ -16,7 +16,7 @@ app.use(helmet());
 app.use(cors({
   origin: (process.env.CLIENT_ORIGIN || 'http://localhost:5173').split(',').map(v => v.trim()).filter(Boolean),
   credentials: true,
-  methods: ['GET', 'POST', 'PATCH'],
+  methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type']
 }));
 app.use(express.json({ limit: '20kb' }));
