@@ -1,6 +1,15 @@
 # Admin Dashboard and Production Readiness
 
 ## Implemented in the feature branch
+- Admin control centre with overview, website settings, services management, and enquiries navigation.
+- Authenticated CMS API to save bilingual homepage title/intro, phone, email, location, and service entries to MongoDB.
+- Public website reads published CMS settings and service catalogue; existing bilingual services are seeded on first database startup.
+- Service add/edit/delete and publish/hide controls; CSV export for the currently loaded enquiry set.
+- Admin CMS edits do not touch ERP data, invoices, invoice PDFs, or Firebase rules.
+
+## Still not implemented in this CMS pass
+- Image/file uploads, arbitrary page builder, FAQs/testimonials editor, admin roles/MFA, audit trail, lead notes/follow-up reminders.
+- Full browser-based end-to-end CMS save/publish verification against the live deployment.
 - Private admin sign-in using deployment-provided email/password and a signed, HTTP-only session cookie.
 - Enquiry dashboard with status filtering, refresh, contact details and status updates.
 - Admin API endpoints deny access unless a valid signed session is present.
