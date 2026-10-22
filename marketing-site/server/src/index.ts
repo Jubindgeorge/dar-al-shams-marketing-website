@@ -214,6 +214,16 @@ async function start() {
     database = client.db(process.env.MONGODB_DB || 'dar_al_shams_marketing');
     await database.collection('leads').createIndex({ createdAt: -1 });
     await database.collection('leads').createIndex({ status: 1, createdAt: -1 });
+    const serviceCount = await database.collection('cms_services').countDocuments();
+    if (serviceCount === 0) {
+      await database.collection('cms_services').insertMany([
+        { id: 'documents', en: 'Document Clearance Support', ar: 'دعم تخليص المستندات', descEn: 'Speak with our team about your document processing requirements.', descAr: 'تواصل مع فريقنا لمناقشة متطلبات معالجة مستنداتك.', published: true, order: 1 },
+        { id: 'visa', en: 'Visa & Residence Support', ar: 'دعم التأشيرات والإقامة', descEn: 'Enquire about visa and residence-related processing support.', descAr: 'استفسر عن خدمات دعم إجراءات التأشيرات والإقامة.', published: true, order: 2 },
+        { id: 'identity', en: 'Emirates ID Support', ar: 'دعم الهوية الإماراتية', descEn: 'Ask our team about Emirates ID-related service requirements.', descAr: 'اسأل فريقنا عن متطلبات خدمات الهوية الإماراتية.', published: true, order: 3 },
+        { id: 'renewals', en: 'Renewals & Cancellations', ar: 'التجديد والإلغاء', descEn: 'Discuss renewal or cancellation requirements with our team.', descAr: 'ناقش متطلبات التجديد أو الإلغاء مع فريقنا.', published: true, order: 4 }
+      ]);
+    }
+
   } else {
     console.warn('MONGODB_URI missing: public enquiry submissions and admin lead listing will return 503 until configured.');
   }
