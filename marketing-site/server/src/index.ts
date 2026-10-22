@@ -34,6 +34,26 @@ const leadSchema = z.object({
 const loginSchema = z.object({ email: z.string().trim().email().max(254), password: z.string().min(1).max(256) });
 const statusSchema = z.object({ status: z.enum(['new', 'contacted', 'in_progress', 'closed']) });
 
+const cmsSettingsSchema = z.object({
+  phoneDisplay: z.string().trim().min(3).max(40),
+  phoneE164: z.string().trim().regex(/^\\d{7,15}$/),
+  email: z.string().trim().email().max(254),
+  location: z.string().trim().min(2).max(160),
+  homeTitleEn: z.string().trim().min(3).max(180),
+  homeIntroEn: z.string().trim().min(3).max(500),
+  homeTitleAr: z.string().trim().min(3).max(180),
+  homeIntroAr: z.string().trim().min(3).max(500)
+});
+const cmsServiceSchema = z.object({
+  id: z.string().trim().min(2).max(40).regex(/^[a-z0-9-]+$/),
+  en: z.string().trim().min(2).max(100),
+  ar: z.string().trim().min(2).max(120),
+  descEn: z.string().trim().min(2).max(500),
+  descAr: z.string().trim().min(2).max(500),
+  published: z.boolean().default(true)
+});
+
+
 let client: MongoClient | undefined;
 let database: ReturnType<MongoClient['db']> | undefined;
 
@@ -136,6 +156,52 @@ app.patch('/api/admin/leads/:id', requireAdmin, async (req, res) => {
     console.error('Admin lead update failed:', error instanceof Error ? error.message : 'unknown error');
     return res.status(500).json({ error: 'Unable to update enquiry right now.' });
   }
+});
+
+
+app.get('/api/public/cms', async (_req, res) => {
+  if (!database) return res.json({ settings: null, services: null });
+  try {
+    const [settings, services] = await Promise.all([
+      database.collection('cms_settings').findOne({ _id: 'site' as any }),
+      database.collection('cms_services').find({ published: true }).sort({ order: 1, id: 1 }).toArray()
+    ]);
+    return res.json({ settings: settings ? Object.fromEntries(Object.entries(settings).filter(([key]) => key !== '_id')) : null, services: services.length ? services.map(({ _id, ...row }) => row) : null });
+  } catch { return res.status(500).json({ error: 'Unable to load website content.' }); }
+});
+app.get('/api/admin/cms', requireAdmin, async (_req, res) => {
+  if (!database) return res.status(503).json({ error: 'Content database is not configured.' });
+  try {
+    const settings = await database.collection('cms_settings').findOne({ _id: 'site' as any });
+    const services = await database.collection('cms_services').find({}).sort({ order: 1, id: 1 }).toArray();
+    return res.json({ settings: settings ? Object.fromEntries(Object.entries(settings).filter(([key]) => key !== '_id')) : null, services: services.map(({ _id, ...row }) => row) });
+  } catch { return res.status(500).json({ error: 'Unable to load website content.' }); }
+});
+app.put('/api/admin/cms/settings', requireAdmin, async (req, res) => {
+  if (!database) return res.status(503).json({ error: 'Content database is not configured.' });
+  const parsed = cmsSettingsSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Please check all website settings and text fields.' });
+  try {
+    await database.collection('cms_settings').updateOne({ _id: 'site' as any }, { $set: { ...parsed.data, updatedAt: new Date() } }, { upsert: true });
+    return res.json({ status: 'saved' });
+  } catch { return res.status(500).json({ error: 'Unable to save website settings.' }); }
+});
+app.put('/api/admin/cms/services/:id', requireAdmin, async (req, res) => {
+  if (!database) return res.status(503).json({ error: 'Content database is not configured.' });
+  const parsed = cmsServiceSchema.safeParse({ ...req.body, id: req.params.id });
+  if (!parsed.success) return res.status(400).json({ error: 'Please check the service fields.' });
+  try {
+    await database.collection('cms_services').updateOne({ id: parsed.data.id }, { $set: { ...parsed.data, updatedAt: new Date() }, $setOnInsert: { createdAt: new Date() } }, { upsert: true });
+    return res.json({ status: 'saved' });
+  } catch { return res.status(500).json({ error: 'Unable to save service.' }); }
+});
+app.delete('/api/admin/cms/services/:id', requireAdmin, async (req, res) => {
+  if (!database) return res.status(503).json({ error: 'Content database is not configured.' });
+  try {
+    const result = await database.collection('cms_services').deleteOne({ id: req.params.id });
+    if (!result.deletedCount) return res.status(404).json({ error: 'Service not found.' });
+    return res.json({ status: 'deleted' });
+  } catch { return res.status(500).json({ error: 'Unable to delete service.' }); }
 });
 
 app.use((_req, res) => res.status(404).json({ error: 'Not found' }));
