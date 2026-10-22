@@ -26,7 +26,7 @@ app.use('/api/admin/login', rateLimit({ windowMs: 15 * 60 * 1000, limit: 8, stan
 const leadSchema = z.object({
   name: z.string().trim().min(2).max(100),
   phone: z.string().trim().min(7).max(32).regex(/^[+0-9() .-]+$/),
-  service: z.enum(['documents', 'visa', 'identity', 'renewals']),
+  service: z.string().trim().min(2).max(40).regex(/^[a-z0-9-]+$/),
   message: z.string().trim().max(1500).optional().default(''),
   locale: z.enum(['en', 'ar']).default('en'),
   source: z.literal('website').default('website')
