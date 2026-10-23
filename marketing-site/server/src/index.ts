@@ -12,6 +12,9 @@ const port = Number(process.env.PORT || 4000);
 const SESSION_COOKIE = 'ds_admin_session';
 const SESSION_TTL_SECONDS = 8 * 60 * 60;
 app.disable('x-powered-by');
+// Render runs the app behind one managed reverse proxy. Trust only that hop so
+// express-rate-limit can derive the client IP from X-Forwarded-For correctly.
+app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors({
   origin: (process.env.CLIENT_ORIGIN || 'http://localhost:5173').split(',').map(v => v.trim()).filter(Boolean),
