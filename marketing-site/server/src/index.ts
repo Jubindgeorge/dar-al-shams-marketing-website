@@ -107,7 +107,7 @@ function adminConfigured(): boolean {
   return Boolean(process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD && sessionSecret());
 }
 function cookieOptions() {
-  return { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict' as const, path: '/api/admin', maxAge: SESSION_TTL_SECONDS * 1000 };
+  return { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'none' as const, path: '/api/admin', maxAge: SESSION_TTL_SECONDS * 1000 };
 }
 function requireAdmin(req: Request, res: Response, next: NextFunction) {
   if (!adminConfigured()) return res.status(503).json({ error: 'Admin access is not configured on the server.' });
