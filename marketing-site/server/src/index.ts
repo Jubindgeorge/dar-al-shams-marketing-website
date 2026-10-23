@@ -133,14 +133,38 @@ app.post('/api/public/leads', async (req, res) => {
 });
 
 app.post('/api/admin/login', (req, res) => {
-  if (!adminConfigured()) return res.status(503).json({ error: 'Admin access is not configured on the server.' });
+  // Never allow an intermediary to cache an authentication response.
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Pragma', 'no-cache');
+
+  if (!adminConfigured()) {
+    return res.status(503).json({ error: 'Admin access is not configured on the server.' });
+  }
+
   const parsed = loginSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: 'Enter a valid email and password.' });
-  const emailMatches = safeEqual(parsed.data.email.toLowerCase(), (process.env.ADMIN_EMAIL || '').trim().toLowerCase());
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Enter a valid email and password.' });
+  }
+
+  const configuredEmail = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+  const emailMatches = safeEqual(parsed.data.email.toLowerCase(), configuredEmail);
   const passwordMatches = safeEqual(parsed.data.password, process.env.ADMIN_PASSWORD || '');
-  if (!emailMatches || !passwordMatches) return res.status(401).json({ error: 'Email or password is incorrect.' });
-  res.cookie(SESSION_COOKIE, sessionToken(), cookieOptions());
-  return res.json({ status: 'authenticated' });
+
+  if (!emailMatches || !passwordMatches) {
+    return res.status(401).json({ error: 'Email or password is incorrect.' });
+  }
+
+  // The cookie must be scoped to every protected admin endpoint and sent cross-site
+  // because the public website and API use different Render hostnames.
+  res.cookie(SESSION_COOKIE, sessionToken(), {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    path: '/api/admin',
+    maxAge: SESSION_TTL_SECONDS * 1000
+  });
+
+  return res.status(200).json({ status: 'authenticated' });
 });
 app.get('/api/admin/session', requireAdmin, (_req, res) => res.json({ status: 'authenticated' }));
 app.post('/api/admin/logout', (_req, res) => {
