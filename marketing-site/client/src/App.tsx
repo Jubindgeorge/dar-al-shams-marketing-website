@@ -24,8 +24,8 @@ export default function App() {
     return () => { active = false; };
   }, [apiBase]);
   const publicCompany = cms?.settings ? { ...company, ...cms.settings } : company;
-  const publicServices = Array.isArray(cms?.services) && cms.services.length ? cms.services : services;
-  const pageTitle = cms?.settings ? (isArabic ? cms.settings.homeTitleAr : cms.settings.homeTitleEn).replace(/\\n/g, '\\n') : t.title;
+  const publicServices = Array.isArray(cms?.services) ? cms.services : services;
+  const pageTitle = cms?.settings ? (isArabic ? cms.settings.homeTitleAr : cms.settings.homeTitleEn).replace(/\\n/g, '\n') : t.title;
   const pageIntro = cms?.settings ? (isArabic ? cms.settings.homeIntroAr : cms.settings.homeIntroEn) : t.intro;
   const whatsappUrl = useMemo(() => 'https://wa.me/' + publicCompany.phoneE164 + '?text=' + encodeURIComponent(isArabic ? 'مرحباً دار الشمس، أود الاستفسار عن خدماتكم.' : 'Hello Dar Al Shams, I would like to enquire about your services.'), [isArabic]);
 
@@ -71,7 +71,7 @@ export default function App() {
 
     <main>
       <section id="home" className="hero"><div className="hero-orb orb-one" /><div className="hero-orb orb-two" /><div className="wrap hero-grid">
-        <div className="hero-copy"><div className="eyebrow"><Sparkles size={15} /> {t.eyebrow}</div><h1>{t.title.split('\n').map((line, i) => <span key={line} className={i === 1 ? 'gold-line' : ''}>{line}<br /></span>)}</h1><p className="hero-intro">{pageIntro}</p><div className="hero-actions"><a className="button button-gold" href="#contact">{t.primary}<ArrowUpRight size={17} /></a><a className="button button-outline" href="#services">{t.secondary}<ChevronRight size={16} /></a></div><div className="hero-proof"><span><ShieldCheck size={17} /> {t.trust.split(' · ')[0]}</span><span><BadgeCheck size={17} /> {t.trust.split(' · ')[1]}</span></div></div>
+        <div className="hero-copy"><div className="eyebrow"><Sparkles size={15} /> {t.eyebrow}</div><h1>{pageTitle.split('\n').map((line, i) => <span key={`${i}-${line}`} className={i === 1 ? 'gold-line' : ''}>{line}<br /></span>)}</h1><p className="hero-intro">{pageIntro}</p><div className="hero-actions"><a className="button button-gold" href="#contact">{t.primary}<ArrowUpRight size={17} /></a><a className="button button-outline" href="#services">{t.secondary}<ChevronRight size={16} /></a></div><div className="hero-proof"><span><ShieldCheck size={17} /> {t.trust.split(' · ')[0]}</span><span><BadgeCheck size={17} /> {t.trust.split(' · ')[1]}</span></div></div>
         <div className="hero-visual"><div className="visual-backdrop" /><div className="visual-frame"><img src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=85" alt="Modern Dubai skyline" /><div className="frame-gradient" /><div className="visual-label"><span className="label-icon"><Building2 size={18} /></span><div><strong>Dar Al Shams</strong><small>{isArabic ? 'خدمات الأعمال والمستندات' : 'Business & document support'}</small></div><ArrowUpRight size={20} /></div></div><div className="floating-card"><div className="float-icon"><Check size={18} /></div><div><strong>{isArabic ? 'تواصل واضح' : 'Clear communication'}</strong><small>{isArabic ? 'خطواتك التالية تبدأ هنا' : 'Your next step starts here'}</small></div></div><div className="decorative-stamp">DS<span>✦</span></div></div>
       </div><div className="hero-bottom"><div className="wrap hero-bottom-inner"><span>{isArabic ? 'دعم في كل خطوة' : 'Support at every step'}</span><span className="line" /><span>{isArabic ? 'تواصل مباشر مع فريقنا' : 'Direct contact with our team'}</span><ArrowDown size={16} /></div></div></section>
 

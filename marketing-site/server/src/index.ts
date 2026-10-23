@@ -166,7 +166,7 @@ app.get('/api/public/cms', async (_req, res) => {
       database.collection('cms_settings').findOne({ _id: 'site' as any }),
       database.collection('cms_services').find({ published: true }).sort({ order: 1, id: 1 }).toArray()
     ]);
-    return res.json({ settings: settings ? Object.fromEntries(Object.entries(settings).filter(([key]) => key !== '_id')) : null, services: services.length ? services.map(({ _id, ...row }) => row) : null });
+    return res.json({ settings: settings ? Object.fromEntries(Object.entries(settings).filter(([key]) => key !== '_id')) : null, services: services.map(({ _id, ...row }) => row) });
   } catch { return res.status(500).json({ error: 'Unable to load website content.' }); }
 });
 app.get('/api/admin/cms', requireAdmin, async (_req, res) => {
