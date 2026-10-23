@@ -74,13 +74,31 @@ function sessionToken(): string {
   return expiry + '.' + signExpiry(expiry);
 }
 function validSession(req: Request): boolean {
-  const raw = req.headers.cookie || '';
-  const item = raw.split(';').map(v => v.trim()).find(v => v.startsWith(SESSION_COOKIE + '='));
-  if (!item || !sessionSecret()) return false;
-  const token = decodeURIComponent(item.slice(SESSION_COOKIE.length + 1));
-  const parts = token.split('.');
-  if (parts.length !== 2 || !/^\d+$/.test(parts[0]) || Number(parts[0]) <= Math.floor(Date.now() / 1000)) return false;
-  return safeEqual(parts[1], signExpiry(parts[0]));
+  if (!sessionSecret()) return false;
+
+  // Browsers can send duplicate cookie names when an older cookie was set
+  // with a different Path. Check every candidate rather than trusting the first.
+  const candidates = (req.headers.cookie || '')
+    .split(';')
+    .map(value => value.trim())
+    .filter(value => value.startsWith(SESSION_COOKIE + '='));
+
+  for (const item of candidates) {
+    let token: string;
+    try {
+      token = decodeURIComponent(item.slice(SESSION_COOKIE.length + 1));
+    } catch {
+      continue;
+    }
+
+    const parts = token.split('.');
+    if (parts.length !== 2 || !/^\d+$/.test(parts[0])) continue;
+    if (Number(parts[0]) <= Math.floor(Date.now() / 1000)) continue;
+
+    // A candidate is accepted only after its HMAC signature is verified.
+    if (safeEqual(parts[1], signExpiry(parts[0]))) return true;
+  }
+  return false;
 }
 function adminConfigured(): boolean {
   return Boolean(process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD && sessionSecret());
