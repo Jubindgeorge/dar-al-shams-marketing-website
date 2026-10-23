@@ -107,7 +107,7 @@ function adminConfigured(): boolean {
   return Boolean(process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD && sessionSecret());
 }
 function cookieOptions() {
-  return { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'none' as const, path: '/api/admin', maxAge: SESSION_TTL_SECONDS * 1000 };
+  return { httpOnly: true, secure: process.env.NODE_ENV === 'production' || process.env.RENDER === 'true', sameSite: 'none' as const, path: '/api/admin', maxAge: SESSION_TTL_SECONDS * 1000 };
 }
 function requireAdmin(req: Request, res: Response, next: NextFunction) {
   if (!adminConfigured()) return res.status(503).json({ error: 'Admin access is not configured on the server.' });
@@ -144,7 +144,7 @@ app.post('/api/admin/login', (req, res) => {
 });
 app.get('/api/admin/session', requireAdmin, (_req, res) => res.json({ status: 'authenticated' }));
 app.post('/api/admin/logout', (_req, res) => {
-  res.clearCookie(SESSION_COOKIE, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/api/admin' });
+  res.clearCookie(SESSION_COOKIE, { httpOnly: true, secure: process.env.NODE_ENV === 'production' || process.env.RENDER === 'true', sameSite: 'none', path: '/api/admin' });
   return res.json({ status: 'signed_out' });
 });
 app.get('/api/admin/leads', requireAdmin, async (req, res) => {
