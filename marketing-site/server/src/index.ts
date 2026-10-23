@@ -92,7 +92,7 @@ function validSession(req: Request): boolean {
     }
 
     const parts = token.split('.');
-    if (parts.length !== 2 || !/^\\d+$/.test(parts[0])) continue;
+    if (parts.length !== 2 || !/^\d+$/.test(parts[0])) continue;
     if (Number(parts[0]) <= Math.floor(Date.now() / 1000)) continue;
 
     // A candidate is accepted only after its HMAC signature is verified.
