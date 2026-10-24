@@ -6,6 +6,9 @@ import rateLimit from 'express-rate-limit';
 import { MongoClient, ObjectId } from 'mongodb';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
+import { existsSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const app = express();
 const port = Number(process.env.PORT || 4000);
@@ -107,7 +110,7 @@ function adminConfigured(): boolean {
   return Boolean(process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD && sessionSecret());
 }
 function cookieOptions() {
-  return { httpOnly: true, secure: process.env.NODE_ENV === 'production' || process.env.RENDER === 'true', sameSite: 'none' as const, path: '/api/admin', maxAge: SESSION_TTL_SECONDS * 1000 };
+  return { httpOnly: true, secure: process.env.NODE_ENV === 'production' || process.env.RENDER === 'true', sameSite: 'lax' as const, path: '/api/admin', maxAge: SESSION_TTL_SECONDS * 1000 };
 }
 function requireAdmin(req: Request, res: Response, next: NextFunction) {
   if (!adminConfigured()) return res.status(503).json({ error: 'Admin access is not configured on the server.' });
@@ -159,7 +162,7 @@ app.post('/api/admin/login', (req, res) => {
   res.cookie(SESSION_COOKIE, sessionToken(), {
     httpOnly: true,
     secure: true,
-    sameSite: 'none',
+    sameSite: 'lax',
     path: '/api/admin',
     maxAge: SESSION_TTL_SECONDS * 1000
   });
@@ -248,6 +251,19 @@ app.delete('/api/admin/cms/services/:id', requireAdmin, async (req, res) => {
     return res.json({ status: 'deleted' });
   } catch { return res.status(500).json({ error: 'Unable to delete service.' }); }
 });
+
+// Serve the admin/public React app from the API origin when the client build is present.
+// This makes the admin session first-party, so browsers do not need third-party cookies.
+const clientDist = resolve(dirname(fileURLToPath(import.meta.url)), '../../client/dist');
+if (existsSync(clientDist)) {
+  app.use(express.static(clientDist, { index: false, fallthrough: true }));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api/')) return next();
+    res.sendFile(resolve(clientDist, 'index.html'), error => {
+      if (error) next(error);
+    });
+  });
+}
 
 app.use((_req, res) => res.status(404).json({ error: 'Not found' }));
 
