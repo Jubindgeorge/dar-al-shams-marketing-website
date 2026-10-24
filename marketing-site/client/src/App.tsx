@@ -17,7 +17,7 @@ export default function App() {
   const [cms, setCms] = useState<any>(null);
   const t = copy[locale];
   const isArabic = locale === 'ar';
-  const apiBase = (import.meta as any).env?.VITE_API_BASE_URL || '';
+  const apiBase = ((import.meta as any).env?.VITE_API_BASE_URL || '').replace(/\/+$/, '');
   useEffect(() => {
     let active = true;
     fetch(apiBase + '/api/public/cms').then(r => r.ok ? r.json() : null).then(data => { if (active && data) setCms(data); }).catch(() => {});
