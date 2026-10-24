@@ -39,7 +39,7 @@ const statusSchema = z.object({ status: z.enum(['new', 'contacted', 'in_progress
 
 const cmsSettingsSchema = z.object({
   phoneDisplay: z.string().trim().min(3).max(40),
-  phoneE164: z.string().trim().regex(/^\\d{7,15}$/),
+  phoneE164: z.string().trim().regex(/^\d{7,15}$/),
   email: z.string().trim().email().max(254),
   location: z.string().trim().min(2).max(160),
   homeTitleEn: z.string().trim().min(3).max(180),
