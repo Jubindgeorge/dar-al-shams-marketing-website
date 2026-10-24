@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { LogOut, RefreshCw, ShieldCheck, LayoutDashboard, Globe, BriefcaseBusiness, Users, Plus, Save, Trash2, Download } from 'lucide-react';
 
-const API = (import.meta as any).env?.VITE_API_BASE_URL || '';
+const API = ((import.meta as any).env?.VITE_API_BASE_URL || '').replace(/\/+$/, '');
 type Lead = { _id: string; name: string; phone: string; service: string; message?: string; locale: string; source: string; status: string; createdAt: string };
 type Settings = { phoneDisplay:string; phoneE164:string; email:string; location:string; homeTitleEn:string; homeIntroEn:string; homeTitleAr:string; homeIntroAr:string };
 type Service = { id:string; en:string; ar:string; descEn:string; descAr:string; published:boolean };
