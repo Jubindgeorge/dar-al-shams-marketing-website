@@ -20,7 +20,15 @@ export default function AdminApp() {
  const request=useCallback(async(path:string,init:RequestInit={})=>{const response=await fetch(API+path,{...init,credentials:'include',headers:{'Content-Type':'application/json',...(init.headers||{})}});const body=await response.json().catch(()=>({}));if(!response.ok)throw new Error(body.error||'Request failed');return body;},[]);
  const loadLeads=useCallback(async()=>{setBusy(true);try{const body=await request('/api/admin/leads'+(filter!=='all'?'?status='+encodeURIComponent(filter):''));setLeads(body.leads||[]);setAuthenticated(true);}catch(e){setMessage(e instanceof Error?e.message:'Could not load enquiries');if(e instanceof Error&&/sign in|unauthorized/i.test(e.message))setAuthenticated(false);}finally{setBusy(false);}},[filter,request]);
  const loadCms=useCallback(async()=>{try{const body=await request('/api/admin/cms');if(body.settings)setSettings({...defaultSettings,...body.settings});if(Array.isArray(body.services))setServices(body.services);else throw new Error('Website content response was incomplete. Please refresh and try again.');}catch(e){setMessage(e instanceof Error?e.message:'Could not load website content');}},[request]);
- useEffect(()=>{request('/api/admin/session').then(()=>setAuthenticated(true)).catch(()=>setAuthenticated(false));},[request]);
+ useEffect(()=>{
+  // The legacy static-site /admin URL redirects to the API-hosted app, where
+  // session cookies are first-party. The API-hosted build leaves API empty.
+  if(API && new URL(API,window.location.href).origin!==window.location.origin){
+   window.location.replace(new URL('/admin',API).toString());
+   return;
+  }
+  request('/api/admin/session').then(()=>setAuthenticated(true)).catch(()=>setAuthenticated(false));
+ },[request]);
  useEffect(()=>{if(authenticated){void loadLeads();void loadCms();}},[authenticated,loadLeads,loadCms]);
  async function signIn(event:FormEvent){event.preventDefault();if(busy)return;setBusy(true);setMessage('');try{await request('/api/admin/login',{method:'POST',body:JSON.stringify({email:email.trim(),password})});const session=await request('/api/admin/session');if(session.status!=='authenticated')throw new Error('Login was accepted, but the browser session was not established. Check that the session cookie is enabled for this site.');setPassword('');setAuthenticated(true);setMessage('');}catch(e){setAuthenticated(false);setMessage(e instanceof Error?e.message:'Sign in failed. Please try again.');}finally{setBusy(false);}}
  async function changeStatus(id:string,status:string){try{await request('/api/admin/leads/'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify({status})});await loadLeads();}catch(e){setMessage(e instanceof Error?e.message:'Could not update enquiry');}}
